@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adnane Driouche // AI Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #16161f;
+      --border: #1e1e2e;
+      --text: #cdd6f4;
+      --muted: #585b70;
+      --green: #a6e3a1;
+      --blue: #89b4fa;
+      --purple: #cba6f7;
+      --red: #f38ba8;
+      --yellow: #f9e2af;
+      --cyan: #89dceb;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* SCANLINE overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 3rem;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--green);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-logo::before { content: '> '; color: var(--muted); }
+
+    .nav-links { display: flex; gap: 1.8rem; list-style: none; }
+    .nav-links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a::before { content: './'; }
+    .nav-links a:hover { color: var(--blue); }
+
+    /* TERMINAL PROMPT HELPER */
+    .prompt { font-family: 'JetBrains Mono', monospace; }
+    .prompt-green { color: var(--green); }
+    .prompt-blue { color: var(--blue); }
+    .prompt-purple { color: var(--purple); }
+    .prompt-yellow { color: var(--yellow); }
+    .prompt-muted { color: var(--muted); }
+    .prompt-red { color: var(--red); }
+    .prompt-cyan { color: var(--cyan); }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 0 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(137,180,250,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(137,180,250,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 20%;
+      left: -10%;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(137,180,250,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2.5rem; position: relative; }
+
+    .terminal-window {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+      box-shadow: 0 0 60px rgba(137,180,250,0.04);
+    }
+
+    .terminal-titlebar {
+      background: var(--surface2);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #f38ba8; }
+    .dot-yellow { background: #f9e2af; }
+    .dot-green { background: #a6e3a1; }
+
+    .terminal-filename {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-left: 0.5rem;
+    }
+
+    .terminal-body { padding: 1.5rem 2rem; }
+    .terminal-line { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 2; }
+
+    .hero-name {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1;
+      margin: 1.5rem 0;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .hero-name .accent { color: var(--blue); }
+
+    .hero-tagline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--green);
+      margin-bottom: 2rem;
+    }
+
+    .hero-tagline::before { content: '// '; color: var(--muted); }
+
+    .cta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      padding: 0.7rem 1.6rem;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: var(--bg);
+      font-weight: 700;
+      border: 1px solid var(--blue);
+    }
+    .btn-primary:hover { box-shadow: 0 0 20px rgba(137,180,250,0.4); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--blue); }
+
+    /* SECTION */
+    section { padding: 6rem 0; }
+
+    .section-header {
+      margin-bottom: 3rem;
+    }
+
+    .section-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--purple);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .section-tag::before { content: '/* '; }
+    .section-tag::after { content: ' */'; }
+
+    h2 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    /* ABOUT */
+    #about { border-top: 1px solid var(--border); }
+    .about-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 4rem; }
+    .about-text p { color: #a6adc8; margin-bottom: 1rem; font-size: 0.95rem; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.2rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 0 20px rgba(137,180,250,0.08);
+    }
+
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* CASE STUDY GRID */
+    #work { border-top: 1px solid var(--border); }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--purple));
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .card:hover {
+      border-color: var(--blue);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(137,180,250,0.08);
+    }
+    .card:hover::before { opacity: 1; }
+
+    .card-index {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+    }
+
+    .card-company {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+
+    .card-section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .card-text { font-size: 0.85rem; color: #a6adc8; line-height: 1.6; }
+
+    .card-outcome {
+      margin-top: 1rem;
+      padding: 0.6rem 0.8rem;
+      background: rgba(166,227,161,0.06);
+      border-left: 2px solid var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--green);
+    }
+
+    .tech-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.8rem; }
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--purple);
+    }
+
+    /* SKILLS */
+    #skills { border-top: 1px solid var(--border); }
+    .skills-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    .skills-table tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .skills-table tr:hover { background: var(--surface); }
+
+    .skills-table td {
+      padding: 1rem 1.5rem 1rem 0;
+      vertical-align: top;
+    }
+
+    .skills-table .col-cat { color: var(--purple); white-space: nowrap; padding-right: 2rem; }
+    .skills-table .col-items { color: #a6adc8; }
+
+    .skills-table .col-items span {
+      display: inline-block;
+      margin-right: 1rem;
+    }
+
+    /* AWARDS */
+    #awards { border-top: 1px solid var(--border); }
+    .award-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .award-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: border-color 0.2s;
+    }
+
+    .award-item:hover { border-color: var(--yellow); }
+
+    .award-name { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+    .award-detail { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    .award-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+      border-radius: 3px;
+    }
+
+    /* CONTACT */
+    #contact { border-top: 1px solid var(--border); }
+    .contact-terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 640px;
+    }
+
+    .contact-body { padding: 2rem; }
+    .contact-line { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 2.2; }
+
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--green);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    footer {
+      padding: 2rem 2.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .terminal-body { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#hero" class="nav-logo">adnane.driouche</a>
+  <ul class="nav-links">
+    <li><a href="#about">about</a></li>
+    <li><a href="#work">work</a></li>
+    <li><a href="#skills">skills</a></li>
+    <li><a href="#awards">awards</a></li>
+    <li><a href="#contact">contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="container">
+    <div class="terminal-window">
+      <div class="terminal-titlebar">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <span class="terminal-filename">whoami.sh</span>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-line"><span class="prompt-muted">$ </span><span class="prompt-green">cat</span> <span class="prompt-blue">profile.json</span></div>
+        <div class="terminal-line"><span class="prompt-muted">{</span></div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"name"</span>: <span class="prompt-yellow">"Adnane Driouche"</span>,</div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"role"</span>: <span class="prompt-yellow">"AI / GenAI Engineer"</span>,</div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"location"</span>: <span class="prompt-yellow">"Paris, France"</span>,</div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"experience"</span>: <span class="prompt-cyan">"3+ years"</span>,</div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"stack"</span>: [<span class="prompt-yellow">"LangChain"</span>, <span class="prompt-yellow">"RAG"</span>, <span class="prompt-yellow">"Multi-Agent"</span>, <span class="prompt-yellow">"Azure"</span>, <span class="prompt-yellow">"GCP"</span>]</div>
+        <div class="terminal-line"><span class="prompt-muted">}</span></div>
+      </div>
+    </div>
+
+    <div class="hero-name">Adnane<br><span class="accent">Driouche</span></div>
+    <div class="hero-tagline">AI Engineer specialising in Agentic Systems &amp; LLM Platforms</div>
+
+    <div class="cta-row">
+      <a href="mailto:adnanedriouche98@gmail.com" class="btn btn-primary">./contact_me</a>
+      <a href="https://www.linkedin.com/in/adnane-driouche-275763177/" target="_blank" class="btn btn-ghost">./linkedin</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">about</div>
+      <h2>Who I Am</h2>
+    </div>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          I'm a GenAI &amp; NLP Engineer currently at <strong style="color:var(--text)">IPSOS France</strong>, where I build production-grade agentic AI systems — multi-agent pipelines, RAG architectures, and multimodal LLM services — on Azure and GCP.
+        </p>
+        <p>
+          My work lives at the intersection of research and engineering: translating state-of-the-art LLM capabilities into reliable, observable, and scalable systems. I care about the full stack — from embedding strategy and chunking to CI/CD, containerisation, and LLMOps monitoring.
+        </p>
+        <p>
+          Prior to IPSOS, I worked at <strong style="color:var(--text)">Henceforth</strong> (Rabat) on diffusion model pipelines, custom ASR systems, and edge AI optimisation — cutting inference latency by 30% using TensorRT and ONNX.
+        </p>
+        <p>
+          Educated at Claude Bernard Lyon 1 University (Master's in AI) and ENSA Morocco (Engineering in Big Data). Three-time winner of the Huawei ICT Competition Cloud Track, including 1st Prize at the Global Final in Dongguan, China.
+        </p>
+      </div>
+      <div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-number">3+</div>
+            <div class="stat-label">years building GenAI</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">+40%</div>
+            <div class="stat-label">retrieval efficiency gain</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">-30%</div>
+            <div class="stat-label">inference latency cut</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">3x</div>
+            <div class="stat-label">Huawei ICT 1st Prize</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">case_studies</div>
+      <h2>Selected Work</h2>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Card 1 -->
+      <div class="card">
+        <div class="card-index">[01] IPSOS France · 2022–present</div>
+        <div class="card-title">Autonomous Analytical Reporting Agents</div>
+        <div class="card-company">@ipsos_france</div>
+
+        <div class="card-section-label">// problem</div>
+        <p class="card-text">Manual extraction and synthesis of data from hundreds of PowerPoint presentations weekly was a critical bottleneck for enterprise research workflows.</p>
+
+        <div class="card-section-label">// solution</div>
+        <p class="card-text">Designed multi-agent orchestration systems using LangChain and LlamaIndex to automate end-to-end analytical pipelines from unstructured inputs to publishable outputs.</p>
+
+        <div class="card-outcome">→ Full pipeline automation; hours of manual work eliminated.</div>
+
+        <div class="tech-row">
+          <span class="badge">LangChain</span>
+          <span class="badge">LangGraph</span>
+          <span class="badge">LlamaIndex</span>
+          <span class="badge">Azure OpenAI</span>
+          <span class="badge">Docker</span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card">
+        <div class="card-index">[02] IPSOS France · 2022–present</div>
+        <div class="card-title">RAG Pipeline &amp; Vector Store Optimisation</div>
+        <div class="card-company">@ipsos_france</div>
+
+        <div class="card-section-label">// problem</div>
+        <p class="card-text">LLM retrieval over large, heterogeneous enterprise corpora (BigQuery + unstructured docs) was slow and imprecise, degrading generation quality.</p>
+
+        <div class="card-section-label">// solution</div>
+        <p class="card-text">Architected RAG systems with Qdrant and FAISS vector stores; optimised chunking, re-ranking, and embedding strategies. Implemented LLMOps monitoring with LangSmith and MLflow.</p>
+
+        <div class="card-outcome">→ +40% text-processing efficiency improvement.</div>
+
+        <div class="tech-row">
+          <span class="badge">RAG</span>
+          <span class="badge">Qdrant</span>
+          <span class="badge">FAISS</span>
+          <span class="badge">LangSmith</span>
+          <span class="badge">MLflow</span>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card">
+        <div class="card-index">[03] IPSOS France · 2022–present</div>
+        <div class="card-title">Text-to-SQL Agent for Natural Language DB Queries</div>
+        <div class="card-company">@ipsos_france</div>
+
+        <div class="card-section-label">// problem</div>
+        <p class="card-text">Non-technical stakeholders at a global research firm were entirely dependent on data teams for any ad-hoc database query — creating bottlenecks across business units.</p>
+
+        <div class="card-section-label">// solution</div>
+        <p class="card-text">Built a conversational Text-to-SQL agent translating natural language into optimised BigQuery SQL, integrated into automated reporting flows and self-service dashboards.</p>
+
+        <div class="card-outcome">→ Self-service data access for non-technical users.</div>
+
+        <div class="tech-row">
+          <span class="badge">LangChain</span>
+          <span class="badge">BigQuery</span>
+          <span class="badge">GPT-4</span>
+          <span class="badge">Vertex AI</span>
+          <span class="badge">GCP</span>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="card">
+        <div class="card-index">[04] IPSOS France · 2022–present</div>
+        <div class="card-title">Multimodal Brand Visibility &amp; Sentiment Analytics</div>
+        <div class="card-company">@ipsos_france</div>
+
+        <div class="card-section-label">// problem</div>
+        <p class="card-text">Media intelligence clients needed scalable brand tracking across thousands of images, videos, and documents — impossible at speed with manual review processes.</p>
+
+        <div class="card-section-label">// solution</div>
+        <p class="card-text">Deployed Vision-Language pipelines (GPT-4V) for automated brand detection, OCR, and multimodal sentiment analysis over large media asset libraries on GCP Vertex AI.</p>
+
+        <div class="card-outcome">→ Enterprise-scale automated brand analytics.</div>
+
+        <div class="tech-row">
+          <span class="badge">GPT-4V</span>
+          <span class="badge">YOLO</span>
+          <span class="badge">OCR</span>
+          <span class="badge">Vertex AI</span>
+          <span class="badge">BigQuery</span>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="card">
+        <div class="card-index">[05] Henceforth · Mar–Sep 2021</div>
+        <div class="card-title">Edge AI Optimisation &amp; Generative Pipelines</div>
+        <div class="card-company">@henceforth_rabat</div>
+
+        <div class="card-section-label">// problem</div>
+        <p class="card-text">Generative models (Text-to-Image, ASR) needed to run reliably on resource-constrained hardware while maintaining production-quality outputs.</p>
+
+        <div class="card-section-label">// solution</div>
+        <p class="card-text">Implemented Hugging Face diffusion pipelines for image generation and a custom deep-learning ASR system with DSP. Applied INT8 quantisation, ONNX export, and TensorRT optimisation.</p>
+
+        <div class="card-outcome">→ −30% inference latency for edge deployments.</div>
+
+        <div class="tech-row">
+          <span class="badge">Hugging Face</span>
+          <span class="badge">TensorRT</span>
+          <span class="badge">ONNX</span>
+          <span class="badge">INT8</span>
+          <span class="badge">DSP</span>
+        </div>
+      </div>
+
+      <!-- Card 6: AI Platform Architecture -->
+      <div class="card">
+        <div class="card-index">[06] IPSOS France · 2022–present</div>
+        <div class="card-title">Enterprise GenAI Platform Architecture</div>
+        <div class="card-company">@ipsos_france</div>
+
+        <div class="card-section-label">// problem</div>
+        <p class="card-text">POC-stage AI models needed to be industrialised into secure, compliant, monitored enterprise platforms — bridging data science, ML engineering, and business stakeholders.</p>
+
+        <div class="card-section-label">// solution</div>
+        <p class="card-text">Designed cloud-native AI platforms on Azure AI Foundry and GCP Vertex AI with LLMOps pipelines (MLflow, LangSmith), RBAC/IAM security, GDPR compliance, and CI/CD for AI services.</p>
+
+        <div class="card-outcome">→ Production-grade, GDPR-compliant AI platform at enterprise scale.</div>
+
+        <div class="tech-row">
+          <span class="badge">Azure AI Foundry</span>
+          <span class="badge">LangGraph</span>
+          <span class="badge">AutoGen</span>
+          <span class="badge">MLflow</span>
+          <span class="badge">Kubernetes</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">tech_stack</div>
+      <h2>Skills &amp; Technologies</h2>
+    </div>
+    <table class="skills-table">
+      <tbody>
+        <tr>
+          <td class="col-cat">Agentic_AI</td>
+          <td class="col-items">
+            <span>LangChain</span><span>LangGraph</span><span>LlamaIndex</span><span>Semantic Kernel</span><span>AutoGen</span><span>CrewAI</span><span>Multi-Agent Systems</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">LLM_Infra</td>
+          <td class="col-items">
+            <span>RAG Architectures</span><span>Prompt Engineering</span><span>Fine-Tuning</span><span>LiteLLM</span><span>Azure APIM</span><span>Tool Calling</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">Vector_DBs</td>
+          <td class="col-items">
+            <span>Qdrant</span><span>FAISS</span><span>Milvus</span><span>Embedding Optimisation</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">Cloud</td>
+          <td class="col-items">
+            <span>Azure AI Foundry</span><span>Azure OpenAI</span><span>GCP Vertex AI</span><span>BigQuery</span><span>AWS SageMaker</span><span>AWS Bedrock</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">MLOps_LLMOps</td>
+          <td class="col-items">
+            <span>MLflow</span><span>LangSmith</span><span>LangFuse</span><span>Weights &amp; Biases</span><span>Docker</span><span>Kubernetes</span><span>CI/CD</span><span>Terraform</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">ML_Vision</td>
+          <td class="col-items">
+            <span>PyTorch</span><span>TensorFlow</span><span>Hugging Face</span><span>YOLO</span><span>OCR</span><span>ASR</span><span>GPT-4V</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">Edge_AI</td>
+          <td class="col-items">
+            <span>ONNX</span><span>TensorRT</span><span>INT8 Quantisation</span><span>DSP</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-cat">Monitoring</td>
+          <td class="col-items">
+            <span>Datadog</span><span>Kibana</span><span>Grafana</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- AWARDS -->
+<section id="awards">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">achievements</div>
+      <h2>Awards &amp; Recognition</h2>
+    </div>
+    <div class="award-list">
+      <div class="award-item">
+        <div>
+          <div class="award-name">Huawei ICT Competition — 1st Prize Global Final</div>
+          <div class="award-detail">Cloud Track · Dongguan, China · 2021</div>
+        </div>
+        <div class="award-badge">1st Global</div>
+      </div>
+      <div class="award-item">
+        <div>
+          <div class="award-name">Huawei ICT Competition — 1st Prize North Africa Regional</div>
+          <div class="award-detail">Cloud Track · Cairo, Egypt · 2021</div>
+        </div>
+        <div class="award-badge">1st Regional</div>
+      </div>
+      <div class="award-item">
+        <div>
+          <div class="award-name">Huawei ICT Competition — 1st Prize National Morocco</div>
+          <div class="award-detail">Cloud Track · Casablanca, Morocco · 2021</div>
+        </div>
+        <div class="award-badge">1st National</div>
+      </div>
+      <div class="award-item">
+        <div>
+          <div class="award-name">E-Talents Innovation Competition — Finalist</div>
+          <div class="award-detail">Paris, France · 2021</div>
+        </div>
+        <div class="award-badge">Finalist</div>
+      </div>
+      <div class="award-item">
+        <div>
+          <div class="award-name">MCPC — Moroccan Collegiate Programming Contest</div>
+          <div class="award-detail">38th National · 1337 Khouribga, Morocco · 2018</div>
+        </div>
+        <div class="award-badge">#38 National</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">connect</div>
+      <h2>Get In Touch</h2>
+    </div>
+    <div class="contact-terminal">
+      <div class="terminal-titlebar">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <span class="terminal-filename">contact.sh</span>
+      </div>
+      <div class="contact-body">
+        <div class="contact-line"><span class="prompt-muted">$ </span><span class="prompt-green">echo</span> <span class="prompt-yellow">"Open to new opportunities"</span></div>
+        <div class="contact-line"><span class="prompt-text">Open to new opportunities</span></div>
+        <div class="contact-line">&nbsp;</div>
+        <div class="contact-line"><span class="prompt-muted">$ </span><span class="prompt-green">curl</span> <span class="prompt-blue">mailto:adnanedriouche98@gmail.com</span></div>
+        <div class="contact-line"><span class="prompt-muted">$ </span><span class="prompt-green">open</span> <span class="prompt-blue">https://linkedin.com/in/adnane-driouche-275763177</span></div>
+        <div class="contact-line"><span class="prompt-muted">$ </span><span class="prompt-green">call</span> <span class="prompt-blue">+33 7 65 26 71 06</span></div>
+        <div class="contact-line"><span class="prompt-muted">$ </span><span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>// adnane.driouche — paris.fr</span>
+  <span>AI_Engineer :: GenAI | Agentic | LLMOps</span>
+</footer>
+
+</body>
+</html>
