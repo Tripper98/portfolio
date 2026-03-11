@@ -242,6 +242,77 @@
     .about-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 4rem; }
     .about-text p { color: #a6adc8; margin-bottom: 1rem; font-size: 0.95rem; }
 
+    /* PROFILE PICTURE */
+    .profile-pic-wrapper {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin: 0 auto 2rem;
+    }
+
+    .profile-pic-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), var(--purple), var(--green));
+      z-index: 0;
+      animation: rotate-border 4s linear infinite;
+    }
+
+    @keyframes rotate-border {
+      0%   { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    .profile-pic-wrapper::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), var(--purple), var(--green));
+      z-index: 0;
+      filter: blur(16px);
+      opacity: 0.45;
+      animation: rotate-border 4s linear infinite;
+    }
+
+    .profile-pic-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface2);
+    }
+
+    .profile-pic-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      filter: grayscale(15%) contrast(1.05);
+      transition: filter 0.4s;
+    }
+
+    .profile-pic-wrapper:hover .profile-pic-inner img {
+      filter: grayscale(0%) contrast(1.1);
+    }
+
+    .profile-pic-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 0.6rem;
+      letter-spacing: 0.08em;
+    }
+    .profile-pic-label::before { content: '// '; }
+
+    .about-side { display: flex; flex-direction: column; }
+
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
     .stat-card {
@@ -455,6 +526,7 @@
       .stat-grid { grid-template-columns: 1fr 1fr; }
       .cards-grid { grid-template-columns: 1fr; }
       .terminal-body { padding: 1rem; }
+      .profile-pic-wrapper { width: 160px; height: 160px; }
     }
   </style>
 </head>
@@ -489,7 +561,7 @@
         <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"name"</span>: <span class="prompt-yellow">"Adnane Driouche"</span>,</div>
         <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"role"</span>: <span class="prompt-yellow">"AI / GenAI Engineer"</span>,</div>
         <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"location"</span>: <span class="prompt-yellow">"Paris, France"</span>,</div>
-        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"experience"</span>: <span class="prompt-cyan">"3+ years"</span>,</div>
+        <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"experience"</span>: <span class="prompt-cyan">"4+ years"</span>,</div>
         <div class="terminal-line">&nbsp;&nbsp;<span class="prompt-purple">"stack"</span>: [<span class="prompt-yellow">"LangChain"</span>, <span class="prompt-yellow">"RAG"</span>, <span class="prompt-yellow">"Multi-Agent"</span>, <span class="prompt-yellow">"Azure"</span>, <span class="prompt-yellow">"GCP"</span>]</div>
         <div class="terminal-line"><span class="prompt-muted">}</span></div>
       </div>
@@ -527,7 +599,13 @@
           Educated at Claude Bernard Lyon 1 University (Master's in AI) and ENSA Morocco (Engineering in Big Data). Three-time winner of the Huawei ICT Competition Cloud Track, including 1st Prize at the Global Final in Dongguan, China.
         </p>
       </div>
-      <div>
+      <div class="about-side">
+        <div class="profile-pic-wrapper">
+          <div class="profile-pic-inner">
+            <img src="my_pic.png" alt="Adnane Driouche" />
+          </div>
+        </div>
+        <div class="profile-pic-label">adnane.driouche — ai engineer</div>
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-number">3+</div>
@@ -538,8 +616,8 @@
             <div class="stat-label">retrieval efficiency gain</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number">5+</div>
-            <div class="stat-label">years NLP & Data Scientist</div>
+            <div class="stat-number">-30%</div>
+            <div class="stat-label">inference latency cut</div>
           </div>
           <div class="stat-card">
             <div class="stat-number">3x</div>
